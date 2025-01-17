@@ -1,0 +1,77 @@
+X1 = R*D^2/Ke^2;
+X2 = R*2*B*D/Ke^2 + D;
+X3 = R*B^2/Ke^2 + B;
+X4 = (R*A^2 + A*B*L)/Ke^2;
+
+% tm = 7;
+% len = 16*pi;
+% k = 0.33;
+
+tm = ctrl_tm;
+len = ctrl_len;
+k = ctrl_k;
+
+% ta = 0;
+% tb = ta + 0.5 * (tm - k*tm);
+% tc = tb + k*tm;
+% 
+% t1 = tb;
+% t3 = tm - tc;
+
+t0 = 0;
+ta = t0 + 0.5 * (tm - k*tm);
+tb = ta + k*tm;
+
+t1 = ta;
+t3 = tm - tb;
+
+
+% E expand
+% E1 = X1*tm  +  X2*len  +  4*len^2*X3*(tm - 2*t1/3 - 2*t3/3)/(2*tm - t1 - t3)^2  +  4*len^2*X4*(t1+t3)/((2*tm - t1 - t3)^2 * t1 * t3)
+% E2 = X1*tm  +  X2*len  +  4*len^2*X3*(tm - 2*tm/3 + 2*tm*k/3)/(2*tm - tm + tm*k)^2  +  4*len^2*X4*(tm-tm*k)/((2*tm - tm + tm*k)^2 * 0.25 * (tm-tm*k)^2)
+% E3 = X1*tm  +  X2*len  +  4*len^2*X3*(tm + 2*tm*k)/(3*(tm + tm*k)^2)  +  16*len^2*X4/((tm + tm*k)^2  * (tm-tm*k))
+E = X1*tm  +  X2*len  +  (2*len/(tm+tm*k))^2  * ( X3*(tm + 2*tm*k)/3 + X4*4/(tm-tm*k))
+
+
+ks = (0:0.0001:0.9);
+Es = zeros(size(ks));
+for i=1:length(ks)
+    Es(i) = X1*tm  +  X2*len  +  (2*len/(tm+tm*ks(i)))^2  * ( X3*(tm + 2*tm*ks(i))/3 + X4*4/(tm-tm*ks(i)));
+end
+figure;
+plot(ks,Es, 'b-','LineWidth',1.5);
+title('A Graph of Energy Used Against k');
+xlabel('Time/s');
+ylabel('Velocity/rads^{-1}');
+grid on;
+% hold on;
+% E = X1*tm  +  X2*len  +  (2*len/(tm+tm*k))^2  * ( X3*(tm + 2*tm*k)/3 + X4*4/(tm-tm*k));
+% ks = (-6:0.02:6);
+% Es = X1*tm  +  X2*len  +  (2*len./(tm+tm*ks)).^2  .* ( X3*(tm + 2*tm*ks)/3 + X4*4./(tm-tm*ks));
+% plot(ks,Es, 'b-')
+% grid on;
+
+k_opt = roots([X3*tm^2 -2*X3*tm^2 ((X3*tm^2)-(18*X4)) 6*X4])
+pk = poly(k_opt);
+
+xvals=-35:0.001:39;
+
+extrm = (8*len^2*tm^2)./(tm+tm*xvals).^3;
+% extrm = 1;
+
+dtrms = polyval(pk,xvals);
+
+alltrms = extrm .* dtrms;
+% alltrms = dtrms;
+% figure;
+% 
+% plot(xvals,alltrms)
+% grid on;
+
+ta_opt = t0 + 0.5 * (tm - tm*k_opt)
+tb_opt = ta_opt + tm*k_opt
+% msk = (tb_opt > ta) & (tb_opt<tm) & (tb_opt<tc_opt);
+% k_opt = k_opt(msk);
+
+E_opt = (X1*tm  +  X2*len  +  (2*len/(tm+tm*k_opt)).^2  * ( X3*(tm + 2*tm*k_opt)/3 + X4*4/(tm-tm*k_opt)))
+pInc =  (E-E_opt(1))*100/E
